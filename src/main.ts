@@ -4,6 +4,8 @@ import {
   CreateStartUpPageContainer,
   TextContainerUpgrade,
   OsEventTypeList,
+  MenuItemProperty,
+  MenuContainerProperty,
 } from '@evenrealities/even_hub_sdk'
 import cards from './cards.json'
 
@@ -102,15 +104,15 @@ await bridge.createStartUpPageContainer(
         isEventCapture: 1,
       }),
     ],
-    menuObject: {
+    menuObject: new MenuContainerProperty({
       menuItems: [
-        { itemName: 'Order', itemID: 1 },
-        { itemName: 'Random', itemID: 2 },
-        { itemName: 'Shuffle', itemID: 3 },
-        { itemName: 'Big letter', itemID: 4 },
-        { itemName: 'Small letter', itemID: 5 },
+        new MenuItemProperty({ itemName: 'Order', itemID: 1 }),
+        new MenuItemProperty({ itemName: 'Random', itemID: 2 }),
+        new MenuItemProperty({ itemName: 'Shuffle', itemID: 3 }),
+        new MenuItemProperty({ itemName: 'Big letter', itemID: 4 }),
+        new MenuItemProperty({ itemName: 'Small letter', itemID: 5 }),
       ],
-    },
+    }),
   }),
 )
 
