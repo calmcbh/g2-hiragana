@@ -18,23 +18,50 @@ type Card = {
 
 const CARDS = cards as Card[]
 const KEY = 'g2-hiragana-index'
-const FLIP_KEY = 'g2-hiragana-flip'
+const MODE_KEY = 'g2-hiragana-mode'
 
 let i = Number(localStorage.getItem(KEY) || '0')
 if (!Number.isFinite(i) || i < 0 || i >= CARDS.length) i = 0
-let flipped = localStorage.getItem(FLIP_KEY) === '1'
+let flipped = false
+let mode: 'seq' | 'rand' = (localStorage.getItem(MODE_KEY) as 'seq' | 'rand') || 'seq'
+let order: number[] = CARDS.map((_, n) => n)
+let big = true
+
+function shuffle() {
+  order = CARDS.map((_, n) => n)
+  for (let a = order.length - 1; a > 0; a--) {
+    const b = Math.floor(Math.random() * (a + 1))
+    ;[order[a], order[b]] = [order[b], order[a]]
+  }
+  i = 0
+}
+
+function current(): Card {
+  const idx = mode === 'rand' ? order[i] : i
+  return CARDS[idx] || CARDS[0]
+}
 
 function line(card: Card, flipped: boolean): string {
-  const head = `${i + 1}/${CARDS.length}`
+  const head = `${i + 1}/${CARDS.length}  ${mode === 'rand' ? 'random' : 'order'}`
   if (!flipped) {
+    if (big) {
+      return [
+        '',
+        '',
+        `          ${card.kana}`,
+        '',
+        `          ${card.kana}`,
+        '',
+        head,
+        'tap flip · swipe next · menu for options',
+      ].join('\n')
+    }
     return [
       '',
-      '',
-      `     ${card.kana}`,
+      card.kana,
       '',
       head,
-      '',
-      'tap flip · swipe next/prev · double-tap exit',
+      'tap flip · swipe next',
     ].join('\n')
   }
   return [
@@ -46,7 +73,7 @@ function line(card: Card, flipped: boolean): string {
     card.en,
     '',
     head,
-    'tap flip · swipe next/prev · double-tap exit',
+    'tap flip · swipe next',
   ].join('\n')
 }
 
@@ -71,10 +98,19 @@ await bridge.createStartUpPageContainer(
         paddingLength: 4,
         containerID: 1,
         containerName: 'main',
-        content: line(CARDS[i], flipped),
+        content: line(current(), flipped),
         isEventCapture: 1,
       }),
     ],
+    menuObject: {
+      menuItems: [
+        { itemName: 'Order', itemID: 1 },
+        { itemName: 'Random', itemID: 2 },
+        { itemName: 'Shuffle', itemID: 3 },
+        { itemName: 'Big letter', itemID: 4 },
+        { itemName: 'Small letter', itemID: 5 },
+      ],
+    },
   }),
 )
 
@@ -82,24 +118,29 @@ function show() {
   if (i < 0) i = CARDS.length - 1
   if (i >= CARDS.length) i = 0
   localStorage.setItem(KEY, String(i))
-  localStorage.setItem(FLIP_KEY, flipped ? '1' : '0')
+  localStorage.setItem(MODE_KEY, mode)
   bridge.textContainerUpgrade(
     new TextContainerUpgrade({
       containerID: 1,
       containerName: 'main',
-      content: line(CARDS[i], flipped),
+      content: line(current(), flipped),
     }),
   )
-  status()
+  const phone = document.getElementById('status')
+  if (phone) phone.textContent = `${mode} ${i + 1}/${CARDS.length} ${current().kana}`
 }
-
-const phone = document.getElementById('status')
-function status() {
-  if (phone) phone.textContent = `${i + 1}/${CARDS.length} · ${CARDS[i].kana} ${flipped ? 'flipped' : ''}`
-}
-status()
 
 const unsubscribe = bridge.onEvenHubEvent(event => {
+  const menuId = event.menuItemClickEvent?.itemID
+  if (menuId) {
+    if (menuId === 1) { mode = 'seq'; i = 0; flipped = false; show() }
+    if (menuId === 2) { mode = 'rand'; shuffle(); flipped = false; show() }
+    if (menuId === 3) { shuffle(); mode = 'rand'; flipped = false; show() }
+    if (menuId === 4) { big = true; show() }
+    if (menuId === 5) { big = false; show() }
+    return
+  }
+
   const sysType = eventTypeOf(event.sysEvent)
   const textType = eventTypeOf(event.textEvent)
 
@@ -131,3 +172,5 @@ const unsubscribe = bridge.onEvenHubEvent(event => {
     unsubscribe()
   }
 })
+
+show()
