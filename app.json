@@ -1,0 +1,12 @@
+{
+  "package_id": "com.calmcbh.hiragana",
+  "edition": "202601",
+  "name": "Hiragana",
+  "version": "0.1.0",
+  "min_app_version": "2.2.6",
+  "min_sdk_version": "0.0.7",
+  "entrypoint": "index.html",
+  "tagline": "Basic hiragana practice",
+  "description": "One hiragana at a time with a simple word. Tap to flip, swipe to move.",
+  "author": "Andrea Maloney"
+}
